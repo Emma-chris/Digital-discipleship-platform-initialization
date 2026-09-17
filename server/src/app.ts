@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 import express from 'express';
 import type { Express } from 'express';
 import helmet from 'helmet';
@@ -104,6 +106,20 @@ export function createApp(): Express {
   api.use('/admin', adminRoutes);
 
   app.use('/api', api);
+
+  if (env.isProd) {
+    const clientDist = path.resolve(import.meta.dirname, '../../client/dist');
+    if (existsSync(clientDist)) {
+      app.use(express.static(clientDist));
+      app.use((req, res, next) => {
+        if (req.method !== 'GET' || req.path.startsWith('/api')) {
+          next();
+          return;
+        }
+        res.sendFile(path.join(clientDist, 'index.html'));
+      });
+    }
+  }
 
   app.use(notFoundHandler);
   app.use(errorHandler);
