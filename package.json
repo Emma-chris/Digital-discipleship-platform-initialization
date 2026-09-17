@@ -1,0 +1,35 @@
+{
+  "name": "disciplepath-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Digital Discipleship & Christian Education Platform — discover, learn, practice, connect, get mentored, serve, lead, multiply.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "shared",
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,client -c blue,green \"npm run dev -w server\" \"npm run dev -w client\"",
+    "build": "npm run build -w server && npm run build -w client",
+    "typecheck": "npm run typecheck -w shared && npm run typecheck -w server && npm run typecheck -w client",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "db:migrate": "npm run db:migrate -w server",
+    "db:migrate:down": "npm run db:migrate:down -w server",
+    "db:status": "npm run db:status -w server"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@tailwindcss/vite": "^4.0.0",
+    "concurrently": "^9.1.0",
+    "eslint": "^9.17.0",
+    "globals": "^15.14.0",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.0",
+    "vitest": "^3.2.4"
+  }
+}
