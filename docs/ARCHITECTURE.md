@@ -102,8 +102,12 @@ Activity → Assessment → enrollment/lesson/course/pathway progress.
 - `requireAuth` resolves the principal: session (loads roles from DB) or
   Bearer token (from signed claims). Roles are **always current from the DB**
   so role changes take effect immediately.
-- `requireRole(RoleCode.ADMIN)` guards `/api/admin/*`; `users` routes return
-  only self data (role-gated access to other users is a later phase).
+- `requireRole(RoleCode.ADMIN)` guards `/api/admin/*`; `requirePermission(...)`
+  further gates individual capabilities. A static permission catalog lives in
+  `shared/constants/permissions.ts` (`Permission`, `ROLE_PERMISSIONS` —
+  admins implicitly pass every permission; `rolesHaveAllPermissions` requires
+  every listed permission). `users` routes return only self data (role-gated
+  access to other users is a later phase).
 
 ## 7. Security checklist
 
@@ -121,14 +125,22 @@ Activity → Assessment → enrollment/lesson/course/pathway progress.
 ## 8. Client architecture
 
 - Routes (`routes/index.tsx`): `PublicLayout` (marketing/auth pages),
-  `ProtectedRoute` → `DashboardLayout` (learner pages), nested
-  `AdminRoute` → admin pages. Lazy-loaded via React Router `lazy`.
+  then `ProtectedRoute` with four role areas:
+  `StudentLayout` (learner pages), `MentorLayout`, `InstructorLayout` and
+  `AdminLayout` — the latter three wrapped in `RoleRoute` (and optionally
+  `PermissionRoute`) which redirect to a standalone 403 `/forbidden` page.
+  Lazy-loaded via React Router `lazy`.
+- `components/layout/AuthenticatedLayout.tsx` is the single shell (sidebar
+  from a role nav config + `UserMenu`); the role layouts are thin wrappers.
 - `services/api.ts`: fetch wrapper — `credentials: include`, attaches
   `X-CSRF-Token` from the cookie when present, supports Bearer tokens, throws
   `ApiClientError` on error envelopes.
-- `services/services.ts`: typed `authService` and `contentService` facades.
-- `hooks/useAuth.ts`: TanStack Query caching of `/auth/me` with `useAuth` /
-  `useSetAuth` / `useLogout` around login/register/logout.
+- `services/services.ts`: typed `authService`, `contentService` and
+  `adminService` facades.
+- `hooks/useAuth.ts`: TanStack Query caching of `/auth/me` with `useAuth`
+  (exposing login/logout round-trips, `hasRole`, `hasPermission`, `homePath`).
+- `lib/auth.ts`: client-side `hasRole` / `hasPermission` / `homePathForRoles`
+  (UI rendering only — the server is authoritative).
 - Design system: Tailwind v4 `@theme` tokens (`brand`, `navy`, fonts, radius,
   shadows) in `index.css`; all components under `components/ui` are in-house.
 - All pages render real empty states (no mock content) and share
@@ -139,6 +151,8 @@ Activity → Assessment → enrollment/lesson/course/pathway progress.
 - List endpoints return real published data; learning writes, enrollment
   creation, assessments/grading, certificates, mentorship and community are
   intentionally staged (endpoints exist and return 501 where appropriate).
-- `/api/community/*` and `/api/admin/*` are authorization-gated 501 stubs.
+- `/api/community/*`, `/api/mentor/*` and `/api/instructor/*` are
+  authorization-gated 501 stubs; `/api/admin/stats` returns real counts and
+  the remaining `/api/admin/*` routes are authorization-gated 501 stubs.
 - `npm audit` reports low/moderate dev-only advisories (vitest, tsup/esbuild)
   with no non-breaking fix; they are not part of the production bundle.

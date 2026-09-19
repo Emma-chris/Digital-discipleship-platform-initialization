@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
-import type { AuthPrincipal } from '@church/shared';
-import { ErrorCode, RoleCode } from '@church/shared';
+import type { AuthPrincipal, Permission } from '@church/shared';
+import { ErrorCode, RoleCode, rolesHaveAllPermissions } from '@church/shared';
 import { ApiError } from '../utils/ApiError.js';
 import { verifyAccessToken } from '../auth/tokens.js';
 import { getRolesForUser } from '../repositories/user.repository.js';
@@ -88,6 +88,26 @@ export function requireRole(...codes: RoleCode[]) {
       principal.roles.includes(RoleCode.ADMIN) ||
       codes.some((code) => principal.roles.includes(code));
     if (!allowed) {
+      next(ApiError.forbidden());
+      return;
+    }
+    next();
+  };
+}
+
+/**
+ * Permission gate. Derives the caller's effective permissions from their
+ * current roles via the shared catalog and requires every listed permission.
+ * `admin` always passes. Runs after requireAuth.
+ */
+export function requirePermission(...permissions: Permission[]) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const principal = req.principal;
+    if (!principal) {
+      next(ApiError.unauthorized());
+      return;
+    }
+    if (!rolesHaveAllPermissions(principal.roles, permissions)) {
       next(ApiError.forbidden());
       return;
     }

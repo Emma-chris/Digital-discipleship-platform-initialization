@@ -1,14 +1,18 @@
+
+
+
 # DisciplePath Platform
 
 A production-oriented digital discipleship and Christian education platform
 ("DisciplePath"). Monorepo with a React web client, an Express REST API, a
 PostgreSQL schema, and shared contracts.
 
-Foundation phase: authentication, authorization, content catalog APIs,
-migrations, the complete routing skeleton (public + dashboard + admin), and
-an in-house Tailwind design system are implemented. Content workflows,
-learning/progress write operations, mentorship and community modules are
-staged in later phases — the API surface and routes exist as real endpoints.
+Foundation phase: authentication, role-based access control (four role areas —
+student, mentor, instructor, admin), a centralized permission catalog, content
+catalog APIs, migrations, the complete routing skeleton, and an in-house
+Tailwind design system are implemented. Content workflows, learning/progress
+write operations, mentorship and community modules are staged in later phases —
+the API surface and routes exist as real endpoints.
 
 ## Stack
 
@@ -61,7 +65,7 @@ Open http://localhost:5173. API health check: http://localhost:3000/api/health.
 | `npm run build` | Build server (tsup) then client (vite) |
 | `npm run typecheck` | `tsc --noEmit` in shared, server, client |
 | `npm run lint` | ESLint over the whole repo |
-| `npm test` | Vitest (shared validation, server password hashing) |
+| `npm test` | Vitest (shared validation, permission catalog, RBAC middleware, password hashing) |
 | `npm run db:migrate` | Apply pending migrations |
 | `npm run db:migrate:down` | Revert the most recent applied migration |
 | `npm run db:status` | List applied/pending migrations with checksums |
@@ -99,6 +103,21 @@ blocks `up` if the on-disk file no longer matches the recorded checksum.
   bearer-only requests skip CSRF.
 - The server re-fetches the user's current roles per request — role changes
   apply immediately.
+
+## Roles & permissions
+
+- Role areas: `student` (default dashboard + learning), `mentor` (`/mentor/*`,
+  guarded by `RoleRoute`), `instructor` (`/instructor/*`), `admin`
+  (`/admin/*`). After login each role lands on its own home page.
+- A shared permission catalog (`shared/constants/permissions.ts`) maps roles
+  to permissions (`ROLE_PERMISSIONS`, `rolesHaveAllPermissions`). The server
+  enforces it via `requireRole` / `requirePermission` middleware at each route
+  boundary; client role/permission helpers surface the same rules for UI
+  rendering but are never authoritative.
+- `GET /api/admin/stats` returns real database counts
+  (users, organizations, programs, courses, pathways, assessments, mentors,
+  instructors) reserved for administrators with `analytics:view`.
+- Unauthorized access to a role area redirects to the `/forbidden` (403) page.
 
 ## Quality gates
 

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, type LoginInput } from '@church/shared';
+import { homePathForRoles } from '@/lib/auth';
 import { authService } from '@/services/services';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/input';
@@ -25,8 +26,8 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginInput) => {
     setServerError(null);
     try {
-      await authService.login(data);
-      navigate('/dashboard', { replace: true });
+      const loginResponse = await authService.login(data);
+      navigate(homePathForRoles(loginResponse.data.user.roles), { replace: true });
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'Login failed. Please try again.';

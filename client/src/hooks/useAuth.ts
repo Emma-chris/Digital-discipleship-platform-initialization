@@ -1,8 +1,13 @@
 import { useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import type { CurrentUser } from '@church/shared';
+import type { CurrentUser, Permission, RoleCode } from '@church/shared';
 import { authService } from '@/services/services';
 import { ApiClientError } from '@/services/api';
+import {
+  hasPermission as userHasPermission,
+  hasRole as userHasRole,
+  homePathForRoles,
+} from '@/lib/auth';
 
 export function useAuth() {
   const queryClient = useQueryClient();
@@ -25,12 +30,18 @@ export function useAuth() {
     }
   }, [queryClient]);
 
+  const roles = query.data?.roles ?? [];
+
   return {
     user: query.data ?? null,
     isLoading: query.isLoading,
     isAuthenticated: Boolean(query.data),
     status: query.data?.status ?? null,
-    roles: query.data?.roles ?? [],
+    roles,
+    hasRole: (role: RoleCode) => userHasRole(roles, role),
+    hasPermission: (permissions: readonly Permission[]) =>
+      userHasPermission(roles, permissions),
+    homePath: homePathForRoles(roles),
     logout,
   };
 }

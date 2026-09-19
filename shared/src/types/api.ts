@@ -44,3 +44,18 @@ export interface CurrentUser {
   status: string;
   createdAt: Date;
 }
+
+/**
+ * Platform-wide aggregate counts for the admin overview. All values are real
+ * database totals — never fabricated analytics. Zero is a legitimate count.
+ */
+export interface AdminStats {
+  users: number;
+  organizations: number;
+  programs: number;
+  courses: number;
+  pathways: number;
+  assessments: number;
+  mentors: number;
+  instructors: number;
+}

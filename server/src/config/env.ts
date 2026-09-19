@@ -26,6 +26,7 @@ const envSchema = z.object({
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
   RATE_LIMIT_AUTH_MAX: z.coerce.number().int().positive().default(10),
+  CORS_ORIGINS: z.string().optional(),
 });
 
 const raw: Record<string, string> = {};
@@ -62,6 +63,7 @@ export type Env = {
   RATE_LIMIT_WINDOW_MS: number;
   RATE_LIMIT_MAX: number;
   RATE_LIMIT_AUTH_MAX: number;
+  CORS_ORIGINS?: string;
   isProd: boolean;
 };
 

@@ -12,6 +12,8 @@ import { sessionMiddleware } from './auth/session.js';
 import { apiRateLimiter, authRateLimiter } from './middleware/rateLimit.js';
 import { csrfCookie, csrfProtection } from './middleware/csrf.js';
 import { errorHandler, notFoundHandler } from './middleware/error.js';
+import { ApiError } from './utils/ApiError.js';
+import { ErrorCode } from '@church/shared';
 import healthRoutes from './routes/health.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import usersRoutes from './routes/users.routes.js';
@@ -23,10 +25,16 @@ import assessmentsRoutes from './routes/assessments.routes.js';
 import enrollmentsRoutes from './routes/enrollments.routes.js';
 import progressRoutes from './routes/progress.routes.js';
 import mentorshipRoutes from './routes/mentorship.routes.js';
+import mentorRoutes from './routes/mentor.routes.js';
+import instructorRoutes from './routes/instructor.routes.js';
 import communityRoutes from './routes/community.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 
-const allowedOrigins = new Set([env.APP_URL, env.API_URL]);
+const extraOrigins = (env.CORS_ORIGINS ?? '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const allowedOrigins = new Set([env.APP_URL, env.API_URL, ...extraOrigins]);
 
 export function createApp(): Express {
   const app = express();
@@ -72,7 +80,11 @@ export function createApp(): Express {
           cb(null, true);
           return;
         }
-        cb(new Error('Not allowed by CORS'));
+        cb(
+          new ApiError(403, 'Origin not allowed by CORS', {
+            code: ErrorCode.FORBIDDEN,
+          }),
+        );
       },
       credentials: true,
       methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
@@ -102,6 +114,8 @@ export function createApp(): Express {
   api.use('/enrollments', enrollmentsRoutes);
   api.use('/progress', progressRoutes);
   api.use('/mentorship', mentorshipRoutes);
+  api.use('/mentor', mentorRoutes);
+  api.use('/instructor', instructorRoutes);
   api.use('/community', communityRoutes);
   api.use('/admin', adminRoutes);
 

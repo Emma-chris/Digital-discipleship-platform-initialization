@@ -1,9 +1,13 @@
 import type { ComponentType } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import { PublicLayout } from '@/components/layout/PublicLayout';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { StudentLayout } from '@/components/layout/StudentLayout';
+import { MentorLayout } from '@/components/layout/MentorLayout';
+import { InstructorLayout } from '@/components/layout/InstructorLayout';
+import { AdminLayout } from '@/components/layout/AdminLayout';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { AdminRoute } from '@/components/auth/AdminRoute';
+import { RoleRoute } from '@/components/auth/RoleRoute';
+import { RoleCode } from '@church/shared';
 
 type LazyImporter = () => Promise<{ default: ComponentType }>;
 
@@ -33,35 +37,100 @@ export const router = createBrowserRouter([
     element: <ProtectedRoute />,
     children: [
       {
-        element: <DashboardLayout />,
+        element: <StudentLayout />,
         children: [
           { path: 'dashboard', ...lazyComponent(() => import('@/pages/DashboardPage')) },
           { path: 'learning', ...lazyComponent(() => import('@/pages/LearningPage')) },
           { path: 'my-courses', ...lazyComponent(() => import('@/pages/MyCoursesPage')) },
+          { path: 'my-pathway', ...lazyComponent(() => import('@/pages/MyPathwayPage')) },
           { path: 'my-progress', ...lazyComponent(() => import('@/pages/MyProgressPage')) },
           { path: 'mentorship', ...lazyComponent(() => import('@/pages/MyMentorshipPage')) },
           { path: 'community', ...lazyComponent(() => import('@/pages/CommunityPage')) },
           { path: 'certificates', ...lazyComponent(() => import('@/pages/CertificatesPage')) },
           { path: 'profile', ...lazyComponent(() => import('@/pages/ProfilePage')) },
           { path: 'settings', ...lazyComponent(() => import('@/pages/SettingsPage')) },
+        ],
+      },
+      {
+        element: <RoleRoute roles={[RoleCode.ADMIN]} />,
+        children: [
           {
-            path: 'admin',
-            element: <AdminRoute />,
+            element: <AdminLayout />,
             children: [
-              { index: true, ...lazyComponent(() => import('@/pages/admin/AdminOverviewPage')) },
-              { path: 'users', ...lazyComponent(() => import('@/pages/admin/AdminUsersPage')) },
-              { path: 'programs', ...lazyComponent(() => import('@/pages/admin/AdminProgramsPage')) },
-              { path: 'courses', ...lazyComponent(() => import('@/pages/admin/AdminCoursesPage')) },
-              { path: 'pathways', ...lazyComponent(() => import('@/pages/admin/AdminPathwaysPage')) },
-              { path: 'mentors', ...lazyComponent(() => import('@/pages/admin/AdminMentorsPage')) },
-              { path: 'assessments', ...lazyComponent(() => import('@/pages/admin/AdminAssessmentsPage')) },
-              { path: 'analytics', ...lazyComponent(() => import('@/pages/admin/AdminAnalyticsPage')) },
-              { path: 'settings', ...lazyComponent(() => import('@/pages/admin/AdminSettingsPage')) },
+              { path: 'admin', ...lazyComponent(() => import('@/pages/admin/AdminOverviewPage')) },
+              { path: 'admin/users', ...lazyComponent(() => import('@/pages/admin/AdminUsersPage')) },
+              {
+                path: 'admin/organizations',
+                ...lazyComponent(() => import('@/pages/admin/AdminOrganizationsPage')),
+              },
+              { path: 'admin/pathways', ...lazyComponent(() => import('@/pages/admin/AdminPathwaysPage')) },
+              { path: 'admin/programs', ...lazyComponent(() => import('@/pages/admin/AdminProgramsPage')) },
+              { path: 'admin/courses', ...lazyComponent(() => import('@/pages/admin/AdminCoursesPage')) },
+              { path: 'admin/mentors', ...lazyComponent(() => import('@/pages/admin/AdminMentorsPage')) },
+              {
+                path: 'admin/instructors',
+                ...lazyComponent(() => import('@/pages/admin/AdminInstructorsPage')),
+              },
+              {
+                path: 'admin/assessments',
+                ...lazyComponent(() => import('@/pages/admin/AdminAssessmentsPage')),
+              },
+              { path: 'admin/analytics', ...lazyComponent(() => import('@/pages/admin/AdminAnalyticsPage')) },
+              { path: 'admin/settings', ...lazyComponent(() => import('@/pages/admin/AdminSettingsPage')) },
+            ],
+          },
+        ],
+      },
+      {
+        element: <RoleRoute roles={[RoleCode.MENTOR]} />,
+        children: [
+          {
+            element: <MentorLayout />,
+            children: [
+              { path: 'mentor', ...lazyComponent(() => import('@/pages/mentor/MentorDashboardPage')) },
+              { path: 'mentor/students', ...lazyComponent(() => import('@/pages/mentor/MentorStudentsPage')) },
+              { path: 'mentor/progress', ...lazyComponent(() => import('@/pages/mentor/MentorProgressPage')) },
+              { path: 'mentor/sessions', ...lazyComponent(() => import('@/pages/mentor/MentorSessionsPage')) },
+              { path: 'mentor/profile', ...lazyComponent(() => import('@/pages/mentor/MentorProfilePage')) },
+            ],
+          },
+        ],
+      },
+      {
+        element: <RoleRoute roles={[RoleCode.INSTRUCTOR]} />,
+        children: [
+          {
+            element: <InstructorLayout />,
+            children: [
+              {
+                path: 'instructor',
+                ...lazyComponent(() => import('@/pages/instructor/InstructorDashboardPage')),
+              },
+              {
+                path: 'instructor/courses',
+                ...lazyComponent(() => import('@/pages/instructor/InstructorCoursesPage')),
+              },
+              {
+                path: 'instructor/programs',
+                ...lazyComponent(() => import('@/pages/instructor/InstructorProgramsPage')),
+              },
+              {
+                path: 'instructor/assessments',
+                ...lazyComponent(() => import('@/pages/instructor/InstructorAssessmentsPage')),
+              },
+              {
+                path: 'instructor/profile',
+                ...lazyComponent(() => import('@/pages/instructor/InstructorProfilePage')),
+              },
             ],
           },
         ],
       },
     ],
+  },
+  {
+    path: 'forbidden',
+    ...lazyComponent(() => import('@/pages/ForbiddenPage')),
   },
   {
     path: '*',

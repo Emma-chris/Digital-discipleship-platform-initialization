@@ -1,49 +1,36 @@
 import { useState } from 'react';
 import { Link, NavLink, Outlet, Navigate } from 'react-router-dom';
-import {
-  BookOpen,
-  Compass,
-  GraduationCap,
-  LayoutGrid,
-  LogOut,
-  Menu,
-  MessageSquare,
-  Settings,
-  Shield,
-  Trophy,
-  User,
-  Users,
-  X,
-} from 'lucide-react';
+import { BookOpen, Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
-import { Badge } from '@/components/ui/Badge';
+import { UserMenu } from './UserMenu';
+import type { NavItem } from './navConfig';
 
-const studentNav = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutGrid },
-  { to: '/learning', label: 'My Learning', icon: BookOpen },
-  { to: '/my-courses', label: 'My Courses', icon: GraduationCap },
-  { to: '/my-progress', label: 'My Progress', icon: Compass },
-  { to: '/mentorship', label: 'Mentorship', icon: Users },
-  { to: '/community', label: 'Community', icon: MessageSquare },
-  { to: '/certificates', label: 'Certificates', icon: Trophy },
-  { to: '/profile', label: 'Profile', icon: User },
-];
+interface AuthenticatedLayoutProps {
+  nav: readonly NavItem[];
+  /** Section label shown in the header for context. */
+  section: string;
+}
 
-export function DashboardLayout() {
-  const { user, roles, logout } = useAuth();
+/**
+ * Shared shell for every authenticated area (student, mentor, instructor,
+ * admin). Role-specific layouts are thin wrappers that supply a nav config —
+ * the layout logic lives here once, and the backend remains authoritative for
+ * actual authorization.
+ */
+export function AuthenticatedLayout({ nav, section }: AuthenticatedLayoutProps) {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
 
   if (!user) return <Navigate to="/login" replace />;
-  const isAdmin = roles.includes('admin');
-  const nav = isAdmin ? [...studentNav, { to: '/admin', label: 'Admin', icon: Shield }] : studentNav;
 
   const navList = (
-    <nav className="flex flex-1 flex-col gap-1" aria-label="Dashboard">
+    <nav className="flex flex-1 flex-col gap-1" aria-label={section}>
       {nav.map((item) => (
         <NavLink
           key={item.to}
           to={item.to}
+          end={item.end}
           onClick={() => setOpen(false)}
           className={({ isActive }) =>
             cn(
@@ -59,37 +46,6 @@ export function DashboardLayout() {
         </NavLink>
       ))}
     </nav>
-  );
-
-  const sidebarFooter = (
-    <div className="border-t border-slate-200 p-4">
-      <div className="mb-3 flex items-center gap-3">
-        <div className="flex size-9 items-center justify-center rounded-full bg-navy-900 text-sm font-semibold text-white">
-          {(user.displayName ?? user.fullName ?? user.email).slice(0, 1).toUpperCase()}
-        </div>
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-navy-900">
-            {user.displayName ?? user.fullName ?? user.email}
-          </p>
-          <p className="truncate text-xs text-slate-500">{user.email}</p>
-        </div>
-      </div>
-      <div className="flex flex-wrap gap-1.5">
-        {user.roles.map((role) => (
-          <Badge key={role} variant="brand">
-            {role}
-          </Badge>
-        ))}
-      </div>
-      <button
-        type="button"
-        onClick={() => void logout()}
-        className="mt-4 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-navy-900"
-      >
-        <LogOut className="size-4" aria-hidden="true" />
-        Log out
-      </button>
-    </div>
   );
 
   return (
@@ -117,8 +73,10 @@ export function DashboardLayout() {
             <X className="size-5" />
           </button>
         </div>
-        <div className="flex flex-1 flex-col overflow-y-auto p-4">{navList}</div>
-        {sidebarFooter}
+        <div className="flex flex-1 flex-col overflow-y-auto p-4 pb-0">{navList}</div>
+        <div className="border-t border-slate-200 p-3">
+          <UserMenu />
+        </div>
       </aside>
 
       {open && (
@@ -140,10 +98,7 @@ export function DashboardLayout() {
           >
             <Menu className="size-5" />
           </button>
-          <div className="flex items-center gap-2 text-sm text-slate-500">
-            <Settings className="size-4" aria-hidden="true" />
-            <span className="hidden sm:inline">Digital Discipleship Platform</span>
-          </div>
+          <div className="flex items-center text-sm text-slate-500">{section}</div>
         </header>
         <main className="flex-1 p-4 sm:p-6 lg:p-8">
           <Outlet />

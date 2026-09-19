@@ -1,4 +1,5 @@
 import type {
+  AdminStats,
   CurrentUser,
   LoginInput,
   ProfileUpdateInput,
@@ -93,4 +94,8 @@ export const contentService = {
     api.get<Paginated<EnrolledCourse>>(`/enrollments?page=${page}&pageSize=${pageSize}`),
   progress: (page = 1, pageSize = 20) =>
     api.get<Paginated<CourseProgressState>>(`/progress?page=${page}&pageSize=${pageSize}`),
+};
+
+export const adminService = {
+  stats: () => api.get<AdminStats>('/admin/stats'),
 };

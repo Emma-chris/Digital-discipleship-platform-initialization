@@ -26,7 +26,7 @@ function Brand() {
 }
 
 export function PublicLayout() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, homePath } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -54,7 +54,7 @@ export function PublicLayout() {
           </nav>
           <div className="hidden items-center gap-2 lg:flex">
             {isLoading ? null : isAuthenticated ? (
-              <Link to="/dashboard">
+              <Link to={homePath}>
                 <Button>Dashboard</Button>
               </Link>
             ) : (
@@ -99,7 +99,7 @@ export function PublicLayout() {
               ))}
               <li className="mt-2 flex gap-2">
                 {isAuthenticated ? (
-                  <Link to="/dashboard" className="flex-1" onClick={() => setMenuOpen(false)}>
+                  <Link to={homePath} className="flex-1" onClick={() => setMenuOpen(false)}>
                     <Button className="w-full">Dashboard</Button>
                   </Link>
                 ) : (
